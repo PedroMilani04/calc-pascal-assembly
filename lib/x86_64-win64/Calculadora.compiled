@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="C:\Users\Pedro\Documents\Codes\Lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe" Date="1482330472"/>
+  <Params Value=" -MObjFPC -Scghi -O1 -gw3 -gl -WG -l -vewnhibq -FiC:\Users\Pedro\Documents\Codes\Lazarus\Calculadora\lib\x86_64-win64 -FuC:\Users\Pedro\Documents\Codes\Lazarus\lcl\units\x86_64-win64\win32 -FuC:\Users\Pedro\Documents\Codes\Lazarus\lcl\units\x86_64-win64 -FuC:\Users\Pedro\Documents\Codes\Lazarus\components\freetype\lib\x86_64-win64 -FuC:\Users\Pedro\Documents\Codes\Lazarus\components\lazutils\lib\x86_64-win64 -FuC:\Users\Pedro\Documents\Codes\Lazarus\packager\units\x86_64-win64 -FuC:\Users\Pedro\Documents\Codes\Lazarus\Calculadora\ -FUC:\Users\Pedro\Documents\Codes\Lazarus\Calculadora\lib\x86_64-win64\ -FEC:\Users\Pedro\Documents\Codes\Lazarus\Calculadora\ -oC:\Users\Pedro\Documents\Codes\Lazarus\Calculadora\Calculadora.exe -dLCL -dLCLwin32 Calculadora.lpr"/>
+</CONFIG>
