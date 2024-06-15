@@ -539,6 +539,196 @@ end;
 
  end;
 
+function fsub(s1:string; s2:string):string;
+var
+  x:real;
+  y:real;
+  res:string;
+
+begin
+   DecimalSeparator := '.';
+   x:=StrToFloat(s1);
+   y:=StrToFloat(s2);
+
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fld y
+   fsub
+   fstp x
+  end;
+
+  fsub:=FloatToStr(x);
+
+
+end;
+
+
+function fdiv(s1:string; s2:string):string;
+var
+  x:real;
+  y:real;
+  res:string;
+
+begin
+   DecimalSeparator := '.';
+   x:=StrToFloat(s1);
+   y:=StrToFloat(s2);
+
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fld y
+   fdiv
+   fstp x
+  end;
+
+  fdiv:=FloatToStr(x);
+
+
+end;
+
+
+
+function fmul(s1:string; s2:string):string;
+var
+  x:real;
+  y:real;
+  res:string;
+
+begin
+   DecimalSeparator := '.';
+   x:=StrToFloat(s1);
+   y:=StrToFloat(s2);
+
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fld y
+   fmul
+   fstp x
+  end;
+
+  fmul:=FloatToStr(x);
+
+
+end;
+
+function fpow(s1:string; s2:string):string;
+var
+  x:real;
+  y:real;
+
+  res:string;
+
+begin
+   DecimalSeparator := '.';
+   x:=StrToFloat(s1);
+   y:=StrToFloat(s2);
+
+  {$ASMMODE intel}
+  asm
+   finit
+   fld y
+   fld1
+   fld x
+   fyl2x
+   fmul
+   fld st  // não permitiu fld apenas para duplicar o topo, então fld st deve funcionar para isso
+   frndint
+   fsub st(1),st
+   fxch
+   f2xm1
+   fld1
+   fadd
+   fscale
+   fstp x  // no exemplo ele volta para uma variavel r, com fstp r, caso o resultado dessa função saia errado, pode ser esse o problema
+  end;
+
+  fpow:=FloatToStr(x);
+
+
+end;
+
+
+// trigonometricas
+
+function fcos(s1:string):string;
+var
+  x:real;
+  res:string;
+
+begin
+   DecimalSeparator := '.';
+   x:=StrToFloat(s1);
+
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fcos
+   fstp x
+  end;
+
+  fcos:=FloatToStr(x);
+
+
+end;
+
+
+function fsin(s1:string):string;
+var
+  x:real;
+  res:string;
+
+begin
+   DecimalSeparator := '.';
+   x:=StrToFloat(s1);
+
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fsin
+   fstp x
+  end;
+
+  fsin:=FloatToStr(x);
+
+
+end;
+
+
+function ftan(s1:string):string;
+var
+  x:real;
+
+  res:string;
+
+begin
+   DecimalSeparator := '.';
+   x:=StrToFloat(s1);
+
+
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fsincos
+   fdiv
+   fstp x
+  end;
+
+  ftan:=FloatToStr(x);
+
+
+end;
+
+
+
 
 
 procedure evaluate(fila:queue); // Expressão -> Tokens -> Polonesa (Pilha, fila) -> Varredura única (chamadas a funções da FPU)
