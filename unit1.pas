@@ -40,7 +40,6 @@ type // LISTA PARA OS NUMEROS(strings)
     Button14: TButton;
     Button15: TButton;
     Button16: TButton;
-    Button17: TButton;
     Button18: TButton;
     Button19: TButton;
     Button20: TButton;
@@ -56,12 +55,14 @@ type // LISTA PARA OS NUMEROS(strings)
     Button30: TButton;
     Button31: TButton;
     Button32: TButton;
+    Button33: TButton;
+    Button34: TButton;
+    Button35: TButton;
     Edit1: TEdit;
     ButtonAdd: TButton;
     ButtonEqual: TButton;
     Button0: TButton;
     Button1: TButton;
-    Button2: TButton;
     Button3: TButton;
     Button4: TButton;
     Button5: TButton;
@@ -76,6 +77,8 @@ type // LISTA PARA OS NUMEROS(strings)
     ButtonCE: TButton;
     ButtonC: TButton;
     Edit2: TEdit;
+    RadioButton1: TRadioButton;
+    RadioButton2: TRadioButton;
     procedure ButtonEqualClick(Sender: TObject);
     procedure Edit2Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -83,6 +86,8 @@ type // LISTA PARA OS NUMEROS(strings)
     procedure ButtonBackspaceClick(Sender: TObject);
     procedure ButtonCEClick(Sender: TObject);
     procedure ButtonCClick(Sender: TObject);
+    procedure RadioButton1Change(Sender: TObject);
+    procedure RadioButton2Change(Sender: TObject);
   private
     { Private declarations }
   public
@@ -91,7 +96,8 @@ type // LISTA PARA OS NUMEROS(strings)
 
 var
   Form1: TForm1;
-  Expression: string; // Declare the variable to store the expression
+  Expression: string; // expressão
+  Radianos: Boolean; // radianos/graus
 
 implementation
 
@@ -129,7 +135,7 @@ begin
     end
     else
     begin
-        writeln('Stack is empty');
+
         PopS := '#';  { Return a sentinel value }
     end;
 end;
@@ -159,7 +165,7 @@ begin
     end
     else
     begin
-        writeln('Stack is empty');
+
         Pop := '#';  { Return a sentinel value }
     end;
 end;
@@ -209,7 +215,7 @@ var
 begin
     if IsEmpty(fila)=1 then // If the queue is empty, return a flag value
     begin
-        writeln('Queue is empty!');
+
         Dequeue:='empty_queue';
     end
     else
@@ -219,7 +225,7 @@ begin
       fila.front := fila.front^.next; // The front of the queue is iterated
 
       if fila.front = nil then // If the queue had only one element left, set both its start and its end to nil
-         writeln('queue is empty');
+
          fila.rear := nil;
 
       dispose(tempNode); // Free memory occupied by the previous first node
@@ -244,18 +250,25 @@ end;
 // Finding the number in a string
 function getNumber(str:string):string;
 var
-  out:string;
+  res:string;
   i:Integer;
   len:Integer;
   pointFound:Integer;
+  neg:Boolean;
+  start:integer;
 
 begin
-  out:=''; pointFound:=0;
+  res:=''; pointFound:=0;neg:=False;start:=1;
   len := Length(str);
-  for i := 1 to len do
+
+  if str[1]='~' then
+    begin
+      neg:=True;
+      start:=2;
+    end;
+
+  for i := start to len do
   begin
-
-
 
     if (str[i]<>'0') and (str[i]<>'1') and (str[i]<>'2') and (str[i]<>'3') and (str[i]<>'4') and (str[i]<>'5') and (str[i]<>'6') and (str[i]<>'7') and (str[i]<>'8') and (str[i]<>'9') then
     begin
@@ -266,13 +279,13 @@ begin
         if pointFound=1 then break             // And has already been found, break.
         else
             begin
-              out:=out+str[i]; // If it hasn't already been found, accept it and pointFound=1
+              res:=res+str[i]; // If it hasn't already been found, accept it and pointFound=1
               pointFound:=1;
             end;
-        // If it is a point, set pointFound to true and append the point to the out string
+        // If it is a point, set pointFound to true and append the point to the res string
 
       end
-      else  // If is neither a point nor a number, break out of the loop
+      else  // If is neither a point nor a number, break res of the loop
         begin
 
              break;
@@ -282,30 +295,44 @@ begin
         begin
         // If it is a number, append it
 
-        out:=out+str[i];
+        res:=res+str[i];
         end;
   end;
-  getNumber:=out;
+
+  if neg=True then res:='~'+res;
+
+  getNumber:=res;
 end;
 
 function isNumber(str:string):Boolean;
 begin
-  if(getNumber(str)=str)then begin isNumber:=True;end
+
+  if(getNumber(str)=str)  then begin isNumber:=True;end
   else isNumber:=False;
 end;
 function isOperator(str:string):Boolean;
 begin
-  if (str = '+') or (str = '-') or (str = '/') or (str = '*') or (str = '^') or (str = '~') then begin isOperator:=True;end
+  if (str = '+') or (str = '-') or (str = '/') or (str = '*') or (str = '^') or (str = '~') or (str='!') then begin isOperator:=True;end
   else isOperator:=False;
 end;
 function isFunction(str:string):Boolean;
 begin
-  if (str='s') or (str='c') or (str='t') or (str='l') or (str='n') then begin isFunction:=True; end
+  if (str='s') or (str='c') or (str='t') or (str='l') or (str='n') or (str='g') or (str='r') or (str='z') then begin isFunction:=True; end
   else isFunction:=False;
 end;
-
-function isConstant():integer;
+function isConstant(s:string):Boolean;
 begin
+  if (s = 'p') or (s = 'e') then begin isConstant:=True; end
+  else isConstant:=False;
+
+end;
+
+function replaceConstant(s:string):string;
+begin
+  case s of
+    'p':replaceConstant:='3.141592653589793238462643383279502884197';
+    'e':replaceConstant:='2.7182818284590452353602874713527';
+  end;
 end;
 
 // Getting the tokens out of an expression
@@ -316,11 +343,13 @@ var
   atoms:stringArray;
   number:string;
   op: char;
+  neg:boolean;
+  negStr:string;
 
   str2:string;
   str3:string;
 begin
-
+  neg:=False;negStr:='-';
   SetLength(atoms, 100000);
 
   // Create an array of strings, where the strings are either numbers or operators
@@ -330,11 +359,17 @@ begin
 
     while(inputStr[1]=' ') do Delete(inputStr, 1,1);
 
-    if (inputStr[1]<>'0') and (inputStr[1]<>'1') and (inputStr[1]<>'2') and (inputStr[1]<>'3') and (inputStr[1]<>'4') and (inputStr[1]<>'5') and (inputStr[1]<>'6') and (inputStr[1]<>'7') and (inputStr[1]<>'8') and (inputStr[1]<>'9') then
+    if (inputStr[1]<>'0') and (inputStr[1]<>'1') and (inputStr[1]<>'2') and (inputStr[1]<>'3') and (inputStr[1]<>'4') and (inputStr[1]<>'5') and (inputStr[1]<>'6') and (inputStr[1]<>'7') and (inputStr[1]<>'8') and (inputStr[1]<>'9') and (inputStr[1]<>'~') then
     begin // If it is not a number
 
+      // If it is a minus sign, the next number will be negative
+      if inputStr[1]='~' then neg:=True;
+
+
+
+
       // If it is an operator
-      if (inputStr[1] = '+') or (inputStr[1] = '-') or (inputStr[1] = '*') or (inputStr[1] = '/') or (inputStr[1] = '^') or (inputStr[1] = '(') or (inputStr[1] = ')') then
+      if isOperator(inputStr[1]) or (inputStr[1] = '(') or (inputStr[1] = ')') then
       begin
         op := inputStr[1];
         Delete(inputStr, 1, 1);
@@ -353,7 +388,7 @@ begin
         begin
 
           str2:= copy(inputStr, 1, 2); //pi, ln
-          str3:= copy(inputStr, 1, 3); //sin, cos, tan, log,
+          str3:= copy(inputStr, 1, 3); //sin, cos, tan, log, l10
 
           if (str2='pi') or (str2='ln') then
           begin
@@ -385,6 +420,18 @@ begin
                 begin
                 atoms[i]:='l'; Inc(i);
                 end;
+              'l10':
+                begin
+                atoms[i]:='g'; Inc(i);
+                end;
+              'sqt':
+                begin
+                  atoms[i]:='r';Inc(i);
+                end;
+              'sqn':
+                begin
+                  atoms[i]:='z';Inc(i);
+                end;
             end;
             delete(inputStr, 1, 3);
           end;
@@ -403,6 +450,13 @@ begin
          Delete(inputStr, 1, len);
 
       // Add the number to the array of strings
+
+      if neg=True then
+      begin
+        neg:=False;
+        number:=negStr+number;
+      end;
+
       atoms[i]:= number;
       Inc(i);
     end;
@@ -410,7 +464,6 @@ begin
 
   len := i; // the amount of atoms stored
   setLength(atoms, len);
-  writeln('TOKENS: ');for i:=1 to len-1 do write(atoms[i],'  ');
   getAtoms:=atoms;
 end;
 
@@ -441,7 +494,8 @@ begin
     '*':Precedence:=3;
     '/':Precedence:=3;
     '^':Precedence:=4;
-    '!':Precedence:=-1;
+    '!':Precedence:=5;
+    '#':Precedence:=-1;
   end;
 
 
@@ -464,7 +518,7 @@ begin
 
    top := new(PCharNode); // Inicializando pilha
    top^.next := nil;
-   top^.value := '!';
+   top^.value := '#';
 
    len:=Length(atoms);
 
@@ -503,7 +557,7 @@ begin
      end;
 
    end;
-   while(top<>nil) do Enqueue(fila, ''+pop(top));
+   while(top<>nil) and (top^.value<>'#') do Enqueue(fila, ''+pop(top));
    getPrefix:=fila;
 
 end;
@@ -513,7 +567,41 @@ end;
 
 
  // EXPRESSION EVALUATION =======================================================
+// Custom float-string conversion functions
+function getFloat(s:string):real;
+var
+  neg:boolean;
+  x:real;
+begin
+  DecimalSeparator:='.';
+    neg:=False;
 
+  if s[1]='~' then
+  begin
+    Delete(s,1,1);
+    neg:=True;
+  end;
+  x:=StrToFloat(s);
+
+  if neg=True then x:=-1*x;
+  getFloat:=x;
+end;
+function floattostring(x:real):string;
+var
+  s:string;
+begin
+  DecimalSeparator:='.';
+  s:=floattostr(x);
+  if s[1]='-' then
+  begin
+    Delete(s,1,1);
+    s:='~' + s
+  end;
+  floattostring:=s;
+end;
+
+
+// Funções básicas
  function fadd(s1:string; s2:string):string;
  var
    x:real;
@@ -521,9 +609,9 @@ end;
    res:string;
 
  begin
-    DecimalSeparator := '.';
-    x:=StrToFloat(s1);
-    y:=StrToFloat(s2);
+    x:=getFloat(s1);
+    y:=getFloat(s2);
+
 
    {$ASMMODE intel}
    asm
@@ -534,7 +622,7 @@ end;
     fstp x
    end;
 
-   fadd:=FloatToStr(x);
+   fadd:=floattoString(x);
 
 
  end;
@@ -546,9 +634,12 @@ var
   res:string;
 
 begin
-   DecimalSeparator := '.';
-   x:=StrToFloat(s1);
-   y:=StrToFloat(s2);
+
+
+  x:=getFloat(s1);
+  y:=getFloat(s2);
+
+
 
   {$ASMMODE intel}
   asm
@@ -559,11 +650,10 @@ begin
    fstp x
   end;
 
-  fsub:=FloatToStr(x);
+  fsub:=floattostring(x);
 
 
 end;
-
 
 function fdiv(s1:string; s2:string):string;
 var
@@ -572,9 +662,11 @@ var
   res:string;
 
 begin
-   DecimalSeparator := '.';
-   x:=StrToFloat(s1);
-   y:=StrToFloat(s2);
+
+   x:=getFloat(s1);
+    y:=getFloat(s2);
+
+
 
   {$ASMMODE intel}
   asm
@@ -585,12 +677,10 @@ begin
    fstp x
   end;
 
-  fdiv:=FloatToStr(x);
+  fdiv:=floattostring(x);
 
 
 end;
-
-
 
 function fmul(s1:string; s2:string):string;
 var
@@ -598,10 +688,11 @@ var
   y:real;
   res:string;
 
+
 begin
-   DecimalSeparator := '.';
-   x:=StrToFloat(s1);
-   y:=StrToFloat(s2);
+
+    x:=getFloat(s1);
+    y:=getFloat(s2);
 
   {$ASMMODE intel}
   asm
@@ -612,7 +703,7 @@ begin
    fstp x
   end;
 
-  fmul:=FloatToStr(x);
+  fmul:=floattostring(x);
 
 
 end;
@@ -625,9 +716,8 @@ var
   res:string;
 
 begin
-   DecimalSeparator := '.';
-   x:=StrToFloat(s1);
-   y:=StrToFloat(s2);
+    x:=getFloat(s1);
+    y:=getFloat(s2);
 
   {$ASMMODE intel}
   asm
@@ -648,23 +738,106 @@ begin
    fstp x  // no exemplo ele volta para uma variavel r, com fstp r, caso o resultado dessa função saia errado, pode ser esse o problema
   end;
 
-  fpow:=FloatToStr(x);
+  fpow:=floattostring(x);
 
 
 end;
 
 
-// trigonometricas
 
+// trigonometricas em radianos
 function fcos(s1:string):string;
 var
   x:real;
   res:string;
+  y:real;
 
 begin
-   DecimalSeparator := '.';
-   x:=StrToFloat(s1);
+  x:=getFloat(s1);
+  y:=180;
+  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fldpi
+   fld y
+   fmul
+   fdiv
+   fcos
+   fstp x
+  end;
 
+  fcos:=floattostring(x);
+
+
+end;
+                                                                                                                    //n! for n in [0,1] = e^(-(x^(1/n)))
+function fsin(s1:string):string;
+var
+  x:real;
+  res:string;
+  y:real;
+
+begin
+    x:=getFloat(s1);
+    y:=180;
+    while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fldpi
+   fld y
+   fmul
+   fdiv
+   fsin
+   fstp x
+  end;
+
+  fsin:=floattostring(x);
+
+
+end;
+
+function ftan(s1:string):string;
+var
+  x:real;
+  y:real;
+  res:string;
+
+begin
+  x:=getFloat(s1);y:=180;
+  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fldpi
+   fld y
+   fmul
+   fdiv
+   fsincos
+   fdiv
+   fstp x
+  end;
+
+  ftan:=floattostring(x);
+
+
+end;
+
+// trigonometricas em graus
+function fgcos(s1:string):string;
+var
+  x:real;
+  res:string;
+  y:real;
+
+begin
+  x:=getFloat(s1);
+  y:=180;
+  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
   {$ASMMODE intel}
   asm
    finit
@@ -673,21 +846,21 @@ begin
    fstp x
   end;
 
-  fcos:=FloatToStr(x);
+  fgcos:=floattostring(x);
 
 
 end;
-
-
-function fsin(s1:string):string;
+                                                                                                                    //n! for n in [0,1] = e^(-(x^(1/n)))
+function fgsin(s1:string):string;
 var
   x:real;
   res:string;
+  y:real;
 
 begin
-   DecimalSeparator := '.';
-   x:=StrToFloat(s1);
-
+    x:=getFloat(s1);
+    y:=180;
+    while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
   {$ASMMODE intel}
   asm
    finit
@@ -696,23 +869,20 @@ begin
    fstp x
   end;
 
-  fsin:=FloatToStr(x);
+  fgsin:=floattostring(x);
 
 
 end;
 
-
-function ftan(s1:string):string;
+function fgtan(s1:string):string;
 var
   x:real;
-
+  y:real;
   res:string;
 
 begin
-   DecimalSeparator := '.';
-   x:=StrToFloat(s1);
-
-
+  x:=getFloat(s1);y:=180;
+  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
   {$ASMMODE intel}
   asm
    finit
@@ -722,49 +892,129 @@ begin
    fstp x
   end;
 
-  ftan:=FloatToStr(x);
+  fgtan:=floattostring(x);
 
 
 end;
 
 
+// Fatorial
+function fact(s1:string):string;
+var
+  x:real;
+  y:real;
+  e:real;
+begin
+   x:=getFloat(s1);
+  y:=1;
+  {$ASMMODE intel}
+  asm
+
+  fld x
+  fld st
+  fld1
+  fsub
+
+  @loop:
+  fxch
+  fld st(1)
+  fmul
+
+  fxch
+
+  fld1
+  fsub
+
+  ftst
+  fstsw ax
+  sahf
+  ja @loop
 
 
+  fstp x
+  fstp x
+  end;
 
-procedure evaluate(fila:queue); // Expressão -> Tokens -> Polonesa (Pilha, fila) -> Varredura única (chamadas a funções da FPU)
+
+  fact:=floattostring(x);
+
+end;
+
+// Logaritmicas
+function log(base:string;num:string):string;
+var
+  x:real;
+  n:real;
+
+begin
+  n:=getFloat(base);
+  x:=getFloat(num);
+
+  {$ASMMODE intel}
+  asm
+    finit
+    fld1
+    fld n
+    fyl2x
+    fld1
+    fdiv st, st(1)
+    fld x
+    fyl2x
+    fstp x
+  end;
+
+   log:=floattostring(x);
+
+
+end;
+
+function evaluate(fila:queue):string;
 var
   aux:PNode;
   top:PNode;
-  data:string;
+  e:string;
 
 begin
+  e:=replaceConstant('e');
+
   aux:=fila.front;
   new(top);
 
-  while (aux^.next<>nil) do   // Going through the whole list of strings
+  while (aux<>nil) do   // Going through the whole list of strings
   begin
     // If it is a number, push it to the stack
-    if (aux^.data = getNumber(aux^.data)) then
+    if isNumber(aux^.data) or isConstant(aux^.data) then
       begin
-         pushS(top, aux^.data);
+
+        if isConstant(aux^.data) then begin pushS(top, replaceConstant(aux^.data)); end
+        else pushS(top, aux^.data);
       end
     else // If it is not a number
 
       case aux^.data of
-        '+':
-        begin
-          data := fadd(popS(top),popS(top));
-          pushS(top, data);
-        end;
-        '-':continue;
-        '*':continue;
-        '/':continue;
-        '^':continue;
+        '+':pushS(top, fadd(popS(top),popS(top)));
+        '-':pushS(top, fsub(popS(top),popS(top)));
+        '*':pushS(top, fmul(popS(top),popS(top)));   // BASICAS
+        '/':pushS(top, fdiv(popS(top),popS(top)));
+        '^':pushS(top, fpow(popS(top),popS(top)));
+
+        't':pushS(top, ftan(popS(top)));
+        'c':pushS(top, fcos(popS(top)));            // TRIGONOMETRICAS
+        's':pushS(top, fsin(popS(top)));
+
+        '!':pushS(top, fact(popS(top)));            // FATORIAL
+
+        'l':pushS(top, log(popS(top), popS(top)));
+        'n':pushS(top, log(e, popS(top)));          // LOGARITMICAS
+        'g':pushS(top, log('10', popS(top)));
+
+        'r':pushS(top, fpow(popS(top), '0.5'));
+        'z':pushS(top, fpow(popS(top), fdiv('1', popS(top))));                       //b^1/rp
       end;
 
     aux:=aux^.next;
   end;
-    writeln('result: ', top^.data);
+    evaluate:=popS(top);
 end;
 
 
@@ -772,10 +1022,34 @@ end;
 
 
 
+
 procedure TForm1.ButtonEqualClick(Sender: TObject);
+var
+  atoms:stringArray;
+  fila:queue;
+  result:string;
+
+  aux:PNode;
 begin
-  Expression := Edit1.Text;
-  Edit2.Text := Expression;
+  expression := Edit1.Text;
+
+  atoms:=getAtoms(expression);
+
+  fila:=getPrefix(atoms);
+  //new(aux);
+  //result:='';
+  //aux:=fila.front;
+  //
+  //while aux<>nil do              // uSAD
+  //begin
+  //  result:=result+aux^.data;
+  //  aux:=aux^.next;
+  //end;
+
+
+  result:=evaluate(fila);
+
+  Edit2.Text := result;
 end;
 
 procedure TForm1.Edit2Change(Sender: TObject);
@@ -808,5 +1082,14 @@ begin
   Edit1.Clear;
 end;
 
-end.
+procedure TForm1.RadioButton1Change(Sender: TObject);
+begin
+    Radianos := True;
+end;
 
+procedure TForm1.RadioButton2Change(Sender: TObject);
+begin
+  Radianos := False;
+end;
+
+end.
