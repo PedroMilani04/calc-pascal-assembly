@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Interfaces;
+  Dialogs, StdCtrls, Menus, ExtCtrls, Interfaces;
 
 const
   SIZE = 10000;
@@ -40,6 +40,7 @@ type // LISTA PARA OS NUMEROS(strings)
     Button14: TButton;
     Button15: TButton;
     Button16: TButton;
+    Button17: TButton;
     Button18: TButton;
     Button19: TButton;
     Button20: TButton;
@@ -58,6 +59,7 @@ type // LISTA PARA OS NUMEROS(strings)
     Button33: TButton;
     Button34: TButton;
     Button35: TButton;
+    Button36: TButton;
     Edit1: TEdit;
     ButtonAdd: TButton;
     ButtonEqual: TButton;
@@ -77,15 +79,21 @@ type // LISTA PARA OS NUMEROS(strings)
     ButtonCE: TButton;
     ButtonC: TButton;
     Edit2: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
     RadioButton1: TRadioButton;
     RadioButton2: TRadioButton;
     procedure ButtonEqualClick(Sender: TObject);
     procedure Edit2Change(Sender: TObject);
+    procedure Edit3Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
     procedure ButtonBackspaceClick(Sender: TObject);
     procedure ButtonCEClick(Sender: TObject);
     procedure ButtonCClick(Sender: TObject);
+    procedure Label1Click(Sender: TObject);
+    procedure Label2Click(Sender: TObject);
+    procedure Memo1Change(Sender: TObject);
     procedure RadioButton1Change(Sender: TObject);
     procedure RadioButton2Change(Sender: TObject);
   private
@@ -102,7 +110,6 @@ var
 implementation
 
 {$R *.lfm}
-
 procedure TForm1.FormCreate(Sender: TObject);
 begin
 
@@ -316,8 +323,8 @@ begin
   else isOperator:=False;
 end;
 function isFunction(str:string):Boolean;
-begin
-  if (str='s') or (str='c') or (str='t') or (str='l') or (str='n') or (str='g') or (str='r') or (str='z') then begin isFunction:=True; end
+begin       // sin cos tan log geral ln l10 sqrt sqrtn:z
+  if (str='s') or (str='c') or (str='t') or (str='l') or (str='n') or (str='g') or (str='r') or (str='z') or (str='w') or (str='x') or (str='y') then begin isFunction:=True; end
   else isFunction:=False;
 end;
 function isConstant(s:string):Boolean;
@@ -348,6 +355,9 @@ var
 
   str2:string;
   str3:string;
+  str4:string;
+  str5:string;
+  str6:string;
 begin
   neg:=False;negStr:='-';
   SetLength(atoms, 100000);
@@ -389,6 +399,9 @@ begin
 
           str2:= copy(inputStr, 1, 2); //pi, ln
           str3:= copy(inputStr, 1, 3); //sin, cos, tan, log, l10
+          str4:= copy(inputStr, 1, 4); // sqrt
+          str5:= copy(inputStr, 1, 5); // sqrtn log10
+          str6:= copy(inputStr, 1, 6); // arctan arcsin arccos
 
           if (str2='pi') or (str2='ln') then
           begin
@@ -406,34 +419,65 @@ begin
               'sin':
               begin
                 atoms[i]:='s'; Inc(i);
+                delete(inputStr, 1, 3);
               end;
               'cos':
                 begin
                 atoms[i]:='c'; Inc(i);
+                delete(inputStr, 1, 3);
                 end;
 
               'tan':
                 begin
                  atoms[i]:='t'; Inc(i);
+                 delete(inputStr, 1, 3);
                 end;
               'log':
                 begin
                 atoms[i]:='l'; Inc(i);
-                end;
-              'l10':
-                begin
-                atoms[i]:='g'; Inc(i);
-                end;
-              'sqt':
-                begin
-                  atoms[i]:='r';Inc(i);
-                end;
-              'sqn':
-                begin
-                  atoms[i]:='z';Inc(i);
+                delete(inputStr, 1, 3);
                 end;
             end;
-            delete(inputStr, 1, 3);
+
+            // sqrt log10 arctan arccos arcsin sqrtn
+            if str4='sqrt' then
+              begin
+                atoms[i]:='r'; Inc(i);
+                delete(inputStr, 1, 4);
+              end;
+
+            case str5 of
+              'log10':
+                begin
+                  atoms[i]:='g'; Inc(i);
+                delete(inputStr, 1, 5);
+                end;
+              'sqrtn':
+                begin
+                  atoms[i]:='z'; Inc(i);
+                delete(inputStr, 1, 5);
+                end;
+            end;
+
+            case str6 of
+              'arcsin':
+                begin
+                  atoms[i]:='w'; Inc(i);
+                delete(inputStr, 1, 6);
+                end;
+              'arccos':
+                begin
+                  atoms[i]:='x'; Inc(i);
+                delete(inputStr, 1, 6);
+                end;
+              'arctan':
+                begin
+                   atoms[i]:='y'; Inc(i);
+                delete(inputStr, 1, 6);
+                end;
+            end;
+
+
           end;
         end;
       end;
@@ -745,88 +789,6 @@ end;
 
 
 
-// trigonometricas em radianos
-function fcos(s1:string):string;
-var
-  x:real;
-  res:string;
-  y:real;
-
-begin
-  x:=getFloat(s1);
-  y:=180;
-  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
-  {$ASMMODE intel}
-  asm
-   finit
-   fld x
-   fldpi
-   fld y
-   fmul
-   fdiv
-   fcos
-   fstp x
-  end;
-
-  fcos:=floattostring(x);
-
-
-end;
-                                                                                                                    //n! for n in [0,1] = e^(-(x^(1/n)))
-function fsin(s1:string):string;
-var
-  x:real;
-  res:string;
-  y:real;
-
-begin
-    x:=getFloat(s1);
-    y:=180;
-    while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
-  {$ASMMODE intel}
-  asm
-   finit
-   fld x
-   fldpi
-   fld y
-   fmul
-   fdiv
-   fsin
-   fstp x
-  end;
-
-  fsin:=floattostring(x);
-
-
-end;
-
-function ftan(s1:string):string;
-var
-  x:real;
-  y:real;
-  res:string;
-
-begin
-  x:=getFloat(s1);y:=180;
-  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
-  {$ASMMODE intel}
-  asm
-   finit
-   fld x
-   fldpi
-   fld y
-   fmul
-   fdiv
-   fsincos
-   fdiv
-   fstp x
-  end;
-
-  ftan:=floattostring(x);
-
-
-end;
-
 // trigonometricas em graus
 function fgcos(s1:string):string;
 var
@@ -837,11 +799,15 @@ var
 begin
   x:=getFloat(s1);
   y:=180;
-  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  while x>360 do x:=x-360;
   {$ASMMODE intel}
   asm
    finit
    fld x
+   fld y
+   fdiv
+   fldpi
+   fmul
    fcos
    fstp x
   end;
@@ -860,11 +826,15 @@ var
 begin
     x:=getFloat(s1);
     y:=180;
-    while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+    while x>360 do x:=x-360;
   {$ASMMODE intel}
   asm
    finit
    fld x
+   fld y
+   fdiv
+   fldpi
+   fmul
    fsin
    fstp x
   end;
@@ -882,6 +852,80 @@ var
 
 begin
   x:=getFloat(s1);y:=180;
+  while x>360 do x:=x-360;
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fld y
+   fdiv
+   fldpi
+   fmul
+   fsincos
+   fdivr
+   fstp x
+  end;
+
+  fgtan:=floattostring(x);
+
+
+end;
+
+// trigonometricas em radianos
+function frcos(s1:string):string;
+var
+  x:real;
+  res:string;
+  y:real;
+
+begin
+  x:=getFloat(s1);
+  y:=180;
+  while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fcos
+   fstp x
+  end;
+
+  frcos:=floattostring(x);
+
+
+end;
+                                                                                                                    //n! for n in [0,1] = e^(-(x^(1/n)))
+function frsin(s1:string):string;
+var
+  x:real;
+  res:string;
+  y:real;
+
+begin
+    x:=getFloat(s1);
+    y:=180;
+    while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fsin
+   fstp x
+  end;
+
+  frsin:=floattostring(x);
+
+
+end;
+
+function frtan(s1:string):string;
+var
+  x:real;
+  y:real;
+  res:string;
+
+begin
+  x:=getFloat(s1);y:=180;
   while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
   {$ASMMODE intel}
   asm
@@ -892,11 +936,61 @@ begin
    fstp x
   end;
 
-  fgtan:=floattostring(x);
+  frtan:=floattostring(x);
 
 
 end;
 
+function fgarctan(s1:string):string;
+var
+  x:real;
+  y:real;
+  res:string;
+
+begin
+  x:=getFloat(s1);y:=180;
+  //while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fld1
+   fpatan
+   //fstp x
+   fldpi
+   fdiv
+   fld y
+   fmul
+   fstp x
+  end;
+
+  fgarctan:=floattostring(x);
+
+
+end;
+
+function frarctan(s1:string):string;
+var
+  x:real;
+  y:real;
+  res:string;
+
+begin
+  x:=getFloat(s1);y:=180;
+  //while x>2*getFloat(replaceConstant('p')) do x:=x-2*getFloat(replaceConstant('p'));
+  {$ASMMODE intel}
+  asm
+   finit
+   fld x
+   fld1
+   fpatan
+   fstp x
+  end;
+
+  frarctan:=floattostring(x);
+
+
+end;
 
 // Fatorial
 function fact(s1:string):string;
@@ -968,11 +1062,59 @@ begin
 
 end;
 
+function faux(s1:string):string;
+var
+  x:real;
+begin
+   x:=getFloat(s1);
+  {$ASMMODE intel}
+  asm
+    fld x
+    fld st
+    fmul
+    fld1
+    fsubr
+    fsqrt
+    fld x
+    fdivr
+    fstp x
+  end;
+
+  faux:=floattostring(x);
+
+end;
+
+function fauxr(s1:string):string;
+var
+  x:real;
+begin
+   x:=getFloat(s1);
+  {$ASMMODE intel}
+  asm
+    fld x
+    fld st
+    fmul
+    fld1
+    fsubr
+    fsqrt
+    fld x
+    fdiv
+    fstp x
+  end;
+
+  fauxr:=floattostring(x);
+
+end;
+
+
+
+
 function evaluate(fila:queue):string;
 var
   aux:PNode;
   top:PNode;
   e:string;
+  temp:string;
 
 begin
   e:=replaceConstant('e');
@@ -998,9 +1140,41 @@ begin
         '/':pushS(top, fdiv(popS(top),popS(top)));
         '^':pushS(top, fpow(popS(top),popS(top)));
 
-        't':pushS(top, ftan(popS(top)));
-        'c':pushS(top, fcos(popS(top)));            // TRIGONOMETRICAS
-        's':pushS(top, fsin(popS(top)));
+        't':
+          begin
+            if Radianos=True then pushS(top, frtan(popS(top)));
+            if Radianos=False then pushS(top, fgtan(popS(top)));
+          end;
+        'c':
+          begin
+            if Radianos=True then pushS(top, frcos(popS(top)));
+            if Radianos=False then pushS(top, fgcos(popS(top)));
+          end;
+        's':
+          begin
+            if Radianos=True then pushS(top, frsin(popS(top)));
+            if Radianos=False then pushS(top, fgsin(popS(top)));
+          end;
+        // TRIGONOMETRICAS INVERSAS
+
+
+        'x':
+          begin    // arccos
+            if Radianos=True then pushS(top, frarctan(fauxr(popS(top))));
+            if Radianos=False then pushS(top, fgarctan(fauxr(popS(top))));
+          end;
+        'w':
+          begin    //arcsin
+            if Radianos=True then pushS(top, frarctan(faux(popS(top))));
+            if Radianos=False then pushS(top, fgarctan(faux(popS(top))));
+          end;
+        'y':
+          begin    //arctan
+            if Radianos=True then pushS(top, frarctan(popS(top)));
+            if Radianos=False then pushS(top, fgarctan(popS(top)));
+          end;
+
+
 
         '!':pushS(top, fact(popS(top)));            // FATORIAL
 
@@ -1008,8 +1182,8 @@ begin
         'n':pushS(top, log(e, popS(top)));          // LOGARITMICAS
         'g':pushS(top, log('10', popS(top)));
 
-        'r':pushS(top, fpow(popS(top), '0.5'));
-        'z':pushS(top, fpow(popS(top), fdiv('1', popS(top))));                       //b^1/rp
+        'r':pushS(top, fpow(popS(top), '0.5'));     // Raiz quadrada
+        'z':pushS(top, fpow(popS(top), fdiv('1', popS(top))));  // enésima raiz                     //b^1/rp
       end;
 
     aux:=aux^.next;
@@ -1049,10 +1223,18 @@ begin
 
   result:=evaluate(fila);
 
+
+
+
   Edit2.Text := result;
 end;
 
 procedure TForm1.Edit2Change(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.Edit3Change(Sender: TObject);
 begin
 
 end;
@@ -1080,6 +1262,21 @@ procedure TForm1.ButtonCClick(Sender: TObject);
 begin
   // Clear the Edit1 text
   Edit1.Clear;
+end;
+
+procedure TForm1.Label1Click(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.Label2Click(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.Memo1Change(Sender: TObject);
+begin
+
 end;
 
 procedure TForm1.RadioButton1Change(Sender: TObject);
